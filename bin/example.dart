@@ -4,6 +4,8 @@ String apiSecretBase64 = 'JYPuuWUAic4uprccwkRothlc81gflI8sRL7xiuAzZDU0PfaCNdmRae
 String apiKey = 'zcKC5kyp6HHWjEfCXkNonPudPZDcmHu1ZTJzqCfK3BGc72t4pcAhzvJl2DIRPFVZ';
 String apiPass = 'online78MD%';
 
+//https://github.com/binance/binance-spot-api-docs/blob/master/rest-api.md#check-server-time
+
 Future main(List<String> arguments) async {
   var binanceAPI = BinanceAPI(apiSecretBase64, apiKey, apiPass);
 
