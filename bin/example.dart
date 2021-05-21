@@ -12,10 +12,10 @@ Future main(List<String> arguments) async {
   // var checkServerTime = await binanceAPI.getCheckServerTime();
   // print(checkServerTime);
 
-
+  //
   // var exchangeInfo = await binanceAPI.getExchangeInfo();
   // print(exchangeInfo);
-
+  //
   // var orderBook = await binanceAPI.getOrderBook();
   // print(orderBook);
   //
@@ -25,6 +25,7 @@ Future main(List<String> arguments) async {
   var account = await binanceAPI.getAccount();
   print(account);
 
-
+  var avgPrice = await binanceAPI.getAvgPrice();
+  print(avgPrice);
 
 }

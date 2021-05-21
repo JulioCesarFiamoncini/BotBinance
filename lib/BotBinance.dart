@@ -13,7 +13,19 @@ class BinanceAPI {
   BinanceAPI(this._apiKey, this._apiSecret,
       {this.apiUrl = 'https://api.binance.com/api/v3/'});
 
-  Future<HttpResponse> doBinanceAccontRequest(String method, String requestPath,
+  Future<HttpResponse> doBinanceRequest(String method, String requestPath, [Map<String,String>? parameters, dynamic body]
+      ) async {
+
+    var client = HttpClient(apiUrl)
+      ..requestHeadersBuilder = (clt, url) => {
+      }
+    ;
+
+    var response = await client.request(getHttpMethod(method)!, requestPath, parameters: parameters);
+    return response;
+  }
+
+  Future<HttpResponse> doBinanceSignRequest(String method, String requestPath,
       [dynamic body]) async {
 
     var timeStamp = DateTime.now().millisecondsSinceEpoch;
@@ -53,7 +65,7 @@ class BinanceAPI {
   }
 
   Future<String?> getConnectivity() async {
-    var response = await doBinanceAccontRequest('GET', 'ping');
+    var response = await doBinanceRequest('GET', 'ping');
     if (response.isNotOK || !response.isBodyTypeJSON) return null;
     return response.bodyAsString;
     // var list = response.json as List;
@@ -61,7 +73,7 @@ class BinanceAPI {
   }
 
   Future<String?> getCheckServerTime() async {
-    var response = await doBinanceAccontRequest('GET', 'time');
+    var response = await doBinanceRequest('GET', 'time');
     if (response.isNotOK || !response.isBodyTypeJSON) return null;
     var timevalue2 = response.accessTime.toString();
 
@@ -71,8 +83,11 @@ class BinanceAPI {
   }
 
   Future<String?> getExchangeInfo() async {
-    var response = await doBinanceAccontRequest('GET', 'exchangeInfo');
+    var response = await doBinanceRequest('GET', 'exchangeInfo');
     if (response.isNotOK || !response.isBodyTypeJSON) return null;
+
+    var json = response.json ;
+    var accountType = json['accountType'];
 
     return response.bodyAsString;
     // var list = response.json as List;
@@ -80,28 +95,28 @@ class BinanceAPI {
   }
 
   Future<String?> getOrderBook() async {
-    var response = await doBinanceAccontRequest('GET', 'depth');
+    var response = await doBinanceSignRequest('GET', 'depth');
     if (response.isNotOK || !response.isBodyTypeJSON) return null;
 
     return response.bodyAsString;
   }
 
   Future<String?> getOrder() async {
-    var response = await doBinanceAccontRequest('GET', 'order');
+    var response = await doBinanceSignRequest('GET', 'order');
     if (response.isNotOK || !response.isBodyTypeJSON) return null;
 
     return response.bodyAsString;
   }
 
   Future<String?> getOpenOrders() async {
-    var response = await doBinanceAccontRequest('GET', 'openOrders');
+    var response = await doBinanceSignRequest('GET', 'openOrders');
     if (response.isNotOK || !response.isBodyTypeJSON) return null;
 
     return response.bodyAsString;
   }
 
   Future<String?> getAccount() async {
-    var response = await doBinanceAccontRequest('GET', 'account');
+    var response = await doBinanceSignRequest('GET', 'account');
     if (response.isNotOK || !response.isBodyTypeJSON) return null;
 
     var json = response.json ;
@@ -109,5 +124,23 @@ class BinanceAPI {
 
     return response.bodyAsString;
   }
+
+  Future<String?> getAvgPrice() async {
+    Map<String,String> parameters = {
+      'symbol': 'LTCBTC'
+    };
+
+    var response = await doBinanceRequest('GET', 'avgPrice', parameters);
+    if (response.isNotOK || !response.isBodyTypeJSON) return null;
+
+    var json = response.json ;
+    var accountType = json['accountType'];
+
+    return response.bodyAsString;
+  }
+
+
+
+
 
 }
