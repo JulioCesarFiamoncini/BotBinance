@@ -25,19 +25,27 @@ class BinanceAPI {
     return response;
   }
 
-  Future<HttpResponse> doBinanceSignRequest(String method, String requestPath,
-      [dynamic body]) async {
 
-    var timeStamp = DateTime.now().millisecondsSinceEpoch;
+  Map<String,String> getParameterSing() {
+    var timeStamp = DateTime
+        .now()
+        .millisecondsSinceEpoch;
 
-    Map<String,String> parameters = {
+    Map<String, String> parameters = {
       'recvWindow': '5000',
       'timestamp': '$timeStamp'
     };
 
-    var sign = _signRequest(parameters);
+    return parameters;
+  }
 
-    parameters['signature'] = sign ;
+
+  Future<HttpResponse> doBinanceSignRequest(String method, String requestPath,Map<String,String> parametersSign,
+  Map<String,String> parametersOther, [dynamic body]) async {
+
+    var sign = _signRequest(parametersSign);
+
+    parametersSign['signature'] = sign;
 
     var client = HttpClient(apiUrl)
       ..requestHeadersBuilder = (clt, url) => {
@@ -45,7 +53,14 @@ class BinanceAPI {
       }
     ;
 
-    var response = await client.request(getHttpMethod(method)!, requestPath, parameters: parameters);
+     // Map<String,String> unionMap = {'': ''};
+     // unionMap.addAll(parametersSign);
+    if (parametersOther.isNotEmpty) {
+      parametersSign.addAll(parametersOther);
+    }
+
+    //var response = await client.request(getHttpMethod(method)!, requestPath, parameters: unionMap);
+    var response = await client.request(getHttpMethod(method)!, requestPath, parameters: parametersSign);
     return response;
   }
 
@@ -95,28 +110,25 @@ class BinanceAPI {
   }
 
   Future<String?> getOrderBook() async {
-    var response = await doBinanceSignRequest('GET', 'depth');
+    Map<String,String> parameters = {'': ''};
+    var response = await doBinanceSignRequest('GET', 'depth',getParameterSing(),parameters);
     if (response.isNotOK || !response.isBodyTypeJSON) return null;
 
     return response.bodyAsString;
   }
 
-  Future<String?> getOrder() async {
-    var response = await doBinanceSignRequest('GET', 'order');
-    if (response.isNotOK || !response.isBodyTypeJSON) return null;
-
-    return response.bodyAsString;
-  }
 
   Future<String?> getOpenOrders() async {
-    var response = await doBinanceSignRequest('GET', 'openOrders');
+    Map<String,String> parameters = {'': ''};
+    var response = await doBinanceSignRequest('GET', 'openOrders',getParameterSing(),parameters);
     if (response.isNotOK || !response.isBodyTypeJSON) return null;
 
     return response.bodyAsString;
   }
 
   Future<String?> getAccount() async {
-    var response = await doBinanceSignRequest('GET', 'account');
+    Map<String,String> parameters = {'': ''};
+    var response = await doBinanceSignRequest('GET', 'account',getParameterSing(),parameters);
     if (response.isNotOK || !response.isBodyTypeJSON) return null;
 
     var json = response.json ;
@@ -126,9 +138,8 @@ class BinanceAPI {
   }
 
   Future<String?> getAvgPrice() async {
-    Map<String,String> parameters = {
-      'symbol': 'LTCBTC'
-    };
+
+    Map<String,String> parameters = {'symbol': 'LTCBTC'};
 
     var response = await doBinanceRequest('GET', 'avgPrice', parameters);
     if (response.isNotOK || !response.isBodyTypeJSON) return null;
@@ -141,6 +152,61 @@ class BinanceAPI {
 
 
 
+  Future<String?> getTradersList() async {
+    var response = await doBinanceRequest('GET', 'trades');
+    if (response.isNotOK || !response.isBodyTypeJSON) return null;
+    return response.bodyAsString;
+    // var list = response.json as List;
+    // return list.cast<Map<String, dynamic>>();
+  }
+
+  Future<String?> get24hrTickerPrice() async {
+    var response = await doBinanceRequest('GET', 'ticker/24hr');
+    if (response.isNotOK || !response.isBodyTypeJSON) return null;
+    return response.bodyAsString;
+  }
+
+  Future<String?> getSymbolPrice() async {
+    var response = await doBinanceRequest('GET', 'ticker/price');
+    if (response.isNotOK || !response.isBodyTypeJSON) return null;
+    return response.bodyAsString;
+  }
+
+  Future<String?> getSymbolOrder() async {
+    var response = await doBinanceRequest('GET', 'ticker/bookTicker');
+    if (response.isNotOK || !response.isBodyTypeJSON) return null;
+    return response.bodyAsString;
+  }
+
+  Future<String?> getTestNewOrder() async {
+    Map<String,String> parameters = {'': ''};
+    var response = await doBinanceSignRequest('GET', 'order/test',getParameterSing(),parameters);
+    if (response.isNotOK || !response.isBodyTypeJSON) return null;
+    return response.bodyAsString;
+  }
+
+  Future<String?> getCurrentOpenOrders() async {
+    Map<String,String> parameters = {'': ''};
+    var response = await doBinanceSignRequest('GET', 'openOrders',getParameterSing(),parameters);
+    if (response.isNotOK || !response.isBodyTypeJSON) return null;
+    return response.bodyAsString;
+  }
+
+  Future<String?> getAllOrders() async {
+    Map<String,String> parameters = {'': ''};
+    var response = await doBinanceSignRequest('GET', 'allOrders',getParameterSing(),parameters);
+    if (response.isNotOK || !response.isBodyTypeJSON) return null;
+    return response.bodyAsString;
+  }
+
+  Future<String?> getOrder() async {
+    Map<String,String> parameters = {'symbol': 'LTCBTC'};
+
+    var response = await doBinanceSignRequest('GET', 'order',getParameterSing(),parameters);
+    if (response.isNotOK || !response.isBodyTypeJSON) return null;
+    return response.bodyAsString;
+  }
 
 
-}
+
+  }
