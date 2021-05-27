@@ -9,6 +9,7 @@ class BinanceAPI {
   final String _apiSecret;
 
   final String apiUrl;
+  final Map<String,String> otherParameters = {'': ''};
 
   BinanceAPI(this._apiKey, this._apiSecret,
       {this.apiUrl = 'https://api.binance.com/api/v3/'});
@@ -39,9 +40,24 @@ class BinanceAPI {
     return parameters;
   }
 
+  String _signRequest(Map<String,String> parameters) {
+    if (parameters.containsKey('signature')) {
+      throw StateError('Already signed: $parameters');
+    }
+
+    var queryStringPreSign = encodeQueryString(parameters);
+    var hmacSha256 = Hmac(sha256, utf8.encode(_apiSecret));
+
+    var msg = utf8.encode(queryStringPreSign);
+    var signBytes = hmacSha256.convert( msg ).bytes;
+
+    var signHex = signBytes.map( (b) => b.toRadixString(16).padLeft(2,'0') ).join('') ;
+    return signHex ;
+  }
+
 
   Future<HttpResponse> doBinanceSignRequest(String method, String requestPath,Map<String,String> parametersSign,
-  Map<String,String> parametersOther, [dynamic body]) async {
+  Map<String,String> otherParameters, [dynamic body]) async {
 
     var sign = _signRequest(parametersSign);
 
@@ -53,10 +69,8 @@ class BinanceAPI {
       }
     ;
 
-     // Map<String,String> unionMap = {'': ''};
-     // unionMap.addAll(parametersSign);
-    if (parametersOther.isNotEmpty) {
-      parametersSign.addAll(parametersOther);
+    if (otherParameters.isNotEmpty) {
+      parametersSign.addAll(otherParameters);
     }
 
     //var response = await client.request(getHttpMethod(method)!, requestPath, parameters: unionMap);
@@ -64,20 +78,6 @@ class BinanceAPI {
     return response;
   }
 
-  String _signRequest(Map<String,String> parameters) {
-    if (parameters.containsKey('signature')) {
-      throw StateError('Already signed: $parameters');
-    }
-    
-    var queryStringPreSign = encodeQueryString(parameters);
-    var hmacSha256 = Hmac(sha256, utf8.encode(_apiSecret));
-    
-    var msg = utf8.encode(queryStringPreSign);
-    var signBytes = hmacSha256.convert( msg ).bytes;
-    
-    var signHex = signBytes.map( (b) => b.toRadixString(16).padLeft(2,'0') ).join('') ;
-    return signHex ;
-  }
 
   Future<String?> getConnectivity() async {
     var response = await doBinanceRequest('GET', 'ping');
@@ -110,8 +110,7 @@ class BinanceAPI {
   }
 
   Future<String?> getOrderBook() async {
-    Map<String,String> parameters = {'': ''};
-    var response = await doBinanceSignRequest('GET', 'depth',getParameterSing(),parameters);
+    var response = await doBinanceSignRequest('GET', 'depth',getParameterSing(),otherParameters);
     if (response.isNotOK || !response.isBodyTypeJSON) return null;
 
     return response.bodyAsString;
@@ -119,16 +118,14 @@ class BinanceAPI {
 
 
   Future<String?> getOpenOrders() async {
-    Map<String,String> parameters = {'': ''};
-    var response = await doBinanceSignRequest('GET', 'openOrders',getParameterSing(),parameters);
+    var response = await doBinanceSignRequest('GET', 'openOrders',getParameterSing(),otherParameters);
     if (response.isNotOK || !response.isBodyTypeJSON) return null;
 
     return response.bodyAsString;
   }
 
   Future<String?> getAccount() async {
-    Map<String,String> parameters = {'': ''};
-    var response = await doBinanceSignRequest('GET', 'account',getParameterSing(),parameters);
+    var response = await doBinanceSignRequest('GET', 'account',getParameterSing(),otherParameters);
     if (response.isNotOK || !response.isBodyTypeJSON) return null;
 
     var json = response.json ;
@@ -138,10 +135,9 @@ class BinanceAPI {
   }
 
   Future<String?> getAvgPrice() async {
+    otherParameters.addAll({'symbol': 'LTCBTC'});
 
-    Map<String,String> parameters = {'symbol': 'LTCBTC'};
-
-    var response = await doBinanceRequest('GET', 'avgPrice', parameters);
+    var response = await doBinanceRequest('GET', 'avgPrice', otherParameters);
     if (response.isNotOK || !response.isBodyTypeJSON) return null;
 
     var json = response.json ;
@@ -179,31 +175,36 @@ class BinanceAPI {
   }
 
   Future<String?> getTestNewOrder() async {
-    Map<String,String> parameters = {'': ''};
-    var response = await doBinanceSignRequest('GET', 'order/test',getParameterSing(),parameters);
+    var response = await doBinanceSignRequest('GET', 'order/test',getParameterSing(),otherParameters);
     if (response.isNotOK || !response.isBodyTypeJSON) return null;
     return response.bodyAsString;
   }
 
   Future<String?> getCurrentOpenOrders() async {
-    Map<String,String> parameters = {'': ''};
-    var response = await doBinanceSignRequest('GET', 'openOrders',getParameterSing(),parameters);
+    var response = await doBinanceSignRequest('GET', 'openOrders',getParameterSing(),otherParameters);
     if (response.isNotOK || !response.isBodyTypeJSON) return null;
     return response.bodyAsString;
   }
 
   Future<String?> getAllOrders() async {
-    Map<String,String> parameters = {'': ''};
-    var response = await doBinanceSignRequest('GET', 'allOrders',getParameterSing(),parameters);
+    var response = await doBinanceSignRequest('GET', 'allOrders',getParameterSing(),otherParameters);
     if (response.isNotOK || !response.isBodyTypeJSON) return null;
     return response.bodyAsString;
   }
 
   Future<String?> getOrder() async {
-    Map<String,String> parameters = {'symbol': 'LTCBTC'};
-
-    var response = await doBinanceSignRequest('GET', 'order',getParameterSing(),parameters);
+    otherParameters.addAll({'symbol': 'LTCBTC'});
+    var response = await doBinanceSignRequest('GET', 'order',getParameterSing(),otherParameters);
     if (response.isNotOK || !response.isBodyTypeJSON) return null;
+    return response.bodyAsString;
+  }
+
+  Future<String?> sendTestNewOrder () async {
+    Map<String,String> testParameters = {'symbol': 'LTCBTC',
+      'side': 'SELL',
+      'type': 'MARKET'};
+    var response = await doBinanceSignRequest('POST', 'order/test',getParameterSing(),testParameters);
+    //if (response.isNotOK || !response.isBodyTypeJSON) return null;
     return response.bodyAsString;
   }
 
