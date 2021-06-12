@@ -9,7 +9,7 @@ class BinanceAPI {
   final String _apiSecret;
 
   final String apiUrl;
-  final Map<String,String> otherParameters = {'': ''};
+  final Map<String,String> otherParameters = {};
 
   BinanceAPI(this._apiKey, this._apiSecret,
       {this.apiUrl = 'https://api.binance.com/api/v3/'});
@@ -57,7 +57,7 @@ class BinanceAPI {
 
 
   Future<HttpResponse> doBinanceSignRequest(String method, String requestPath,Map<String,String> parametersSign,
-  Map<String,String> otherParameters, [dynamic body]) async {
+  Map<String,String> otherParameters,[dynamic body]) async {
 
     var sign = _signRequest(parametersSign);
 
@@ -73,7 +73,6 @@ class BinanceAPI {
       parametersSign.addAll(otherParameters);
     }
 
-    //var response = await client.request(getHttpMethod(method)!, requestPath, parameters: unionMap);
     var response = await client.request(getHttpMethod(method)!, requestPath, parameters: parametersSign);
     return response;
   }
@@ -126,10 +125,11 @@ class BinanceAPI {
 
   Future<String?> getAccount() async {
     var response = await doBinanceSignRequest('GET', 'account',getParameterSing(),otherParameters);
-    if (response.isNotOK || !response.isBodyTypeJSON) return null;
-
-    var json = response.json ;
-    var accountType = json['accountType'];
+    // var response = await doBinanceSignRequest('GET', 'account',getParameterSing(),otherParameters);
+    // if (response.isNotOK || !response.isBodyTypeJSON) return null;
+    //
+    // var json = response.json ;
+    // var accountType = json['accountType'];
 
     return response.bodyAsString;
   }
@@ -200,10 +200,10 @@ class BinanceAPI {
   }
 
   Future<String?> sendTestNewOrder () async {
-    Map<String,String> testParameters = {'symbol': 'LTCBTC',
+    otherParameters.addAll({'symbol': 'LTCBTC',
       'side': 'SELL',
-      'type': 'MARKET'};
-    var response = await doBinanceSignRequest('POST', 'order/test',getParameterSing(),testParameters);
+      'type': 'MARKET'});
+    var response = await doBinanceSignRequest('POST', 'order/test',getParameterSing(),otherParameters);
     //if (response.isNotOK || !response.isBodyTypeJSON) return null;
     return response.bodyAsString;
   }
